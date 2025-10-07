@@ -28,8 +28,9 @@ function save(path, arr) {
 // Feeds
 const FEEDS = [
   { name: 'espn', url: 'https://www.espn.com/espn/rss/news' },
-  { name: 'nhl',  url: 'https://www.nhl.com/rss/news' },
-  { name: 'fox',  url: 'https://www.foxsports.com/feedout/syndicatedContent?categoryId=0' }
+  { name: 'nhl',  url: 'https://thehockeywriters.com/feed/' },
+  { name: 'fox',  url: 'https://www.foxsports.com/feedout/syndicatedContent?categoryId=0' },
+  { name: 'cbs', url: 'https://www.cbssports.com/rss/headlines/' }
 ];
 
 for (const f of FEEDS) {
