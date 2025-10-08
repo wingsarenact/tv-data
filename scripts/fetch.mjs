@@ -43,15 +43,24 @@ for (const f of FEEDS) {
   }
 }
 
-// Scores (today)
+// Scores (today + yesterday)
 const tz = 'America/New_York';
 const today = new Date().toLocaleDateString('en-CA', { timeZone: tz }); // YYYY-MM-DD
+const yesterday = new Date(Date.now() - 24*60*60*1000).toLocaleDateString('en-CA', { timeZone: tz }); // YYYY-MM-DD
 
 async function nhlScores() {
   try {
-    const js = await fetchJson(`https://statsapi.web.nhl.com/api/v1/schedule?date=${today}`);
-    const games = js.dates?.[0]?.games || [];
-    return games.map(g => {
+    const [todayData, yesterdayData] = await Promise.all([
+      fetchJson(`https://statsapi.web.nhl.com/api/v1/schedule?date=${today}`),
+      fetchJson(`https://statsapi.web.nhl.com/api/v1/schedule?date=${yesterday}`)
+    ]);
+    
+    const allGames = [
+      ...(todayData.dates?.[0]?.games || []),
+      ...(yesterdayData.dates?.[0]?.games || [])
+    ];
+    
+    return allGames.map(g => {
       const a = g.teams.away.team.abbreviation || g.teams.away.team.name;
       const h = g.teams.home.team.abbreviation || g.teams.home.team.name;
       const as = g.teams.away.score, hs = g.teams.home.score;
@@ -60,11 +69,20 @@ async function nhlScores() {
     });
   } catch { return []; }
 }
+
 async function mlbScores() {
   try {
-    const js = await fetchJson(`https://statsapi.mlb.com/api/v1/schedule?sportId=1&date=${today}`);
-    const games = js.dates?.[0]?.games || [];
-    return games.map(g => {
+    const [todayData, yesterdayData] = await Promise.all([
+      fetchJson(`https://statsapi.mlb.com/api/v1/schedule?sportId=1&date=${today}`),
+      fetchJson(`https://statsapi.mlb.com/api/v1/schedule?sportId=1&date=${yesterday}`)
+    ]);
+    
+    const allGames = [
+      ...(todayData.dates?.[0]?.games || []),
+      ...(yesterdayData.dates?.[0]?.games || [])
+    ];
+    
+    return allGames.map(g => {
       const a = g.teams.away.team.abbreviation || g.teams.away.team.name;
       const h = g.teams.home.team.abbreviation || g.teams.home.team.name;
       const as = g.teams.away.score ?? 0, hs = g.teams.home.score ?? 0;
@@ -73,11 +91,22 @@ async function mlbScores() {
     });
   } catch { return []; }
 }
+
 async function nbaScores() {
   try {
-    const js = await fetchJson('https://cdn.nba.com/static/json/liveData/scoreboard/todaysScoreboard_00.json');
-    const games = js.games || [];
-    return games.map(g => {
+    // NBA API doesn't have date parameter, so we'll fetch today's scoreboard
+    // and try to get yesterday's via a different approach
+    const [todayData, yesterdayData] = await Promise.all([
+      fetchJson('https://cdn.nba.com/static/json/liveData/scoreboard/todaysScoreboard_00.json'),
+      fetchJson(`https://cdn.nba.com/static/json/liveData/scoreboard/${yesterday.replace(/-/g, '')}/scoreboard_00.json`)
+    ]);
+    
+    const allGames = [
+      ...(todayData.games || []),
+      ...(yesterdayData.games || [])
+    ];
+    
+    return allGames.map(g => {
       const a = g.awayTeam.teamTricode, h = g.homeTeam.teamTricode;
       const as = g.awayTeam.score, hs = g.homeTeam.score;
       const status = g.gameStatusText || '';
@@ -85,8 +114,11 @@ async function nbaScores() {
     });
   } catch { return []; }
 }
+
 async function nflScores() {
   try {
+    // NFL API doesn't have date parameter, so we'll fetch current scoreboard
+    // Note: NFL scores are typically only available during the season
     const js = await fetchJson('https://site.api.espn.com/apis/site/v2/sports/football/nfl/scoreboard');
     const events = js.events || [];
     return events.map(ev => {
