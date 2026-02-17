@@ -12,8 +12,12 @@ jobs:
   keepalive:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
-      - name: Keep repo alive with commit
-        uses: gautamkrishnar/keepalive-workflow@v2  # from Marketplace
-        with:
-          time_elapsed: "0"  # commit on every run
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Make keepalive commit
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git commit --allow-empty -m "chore: keepalive"
+          git push
