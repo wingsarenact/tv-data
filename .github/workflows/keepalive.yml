@@ -10,6 +10,6 @@ jobs:
     steps:
       - uses: actions/checkout@v4
       - name: Create keepalive commit
-        uses: efrecon/gh-action-keepalive@master
+        uses: efrecon/gh-action-keepalive@main
         with:
           commit_message: "Keepalive: Update activity marker"
